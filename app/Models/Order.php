@@ -22,7 +22,7 @@ class Order extends Model
         'remise_type',
         'remise',
         'note',
-        'isPublished',
+        'is_published',
     ];
 
     protected $appends = ['total']; // Adds total to the JSON output

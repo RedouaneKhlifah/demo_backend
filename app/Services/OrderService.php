@@ -109,6 +109,9 @@ class OrderService
                 $quantity = $product->pivot->quantity;
                 $product->decrement('stock', $quantity);
             }
+            
+            // mark the order as published
+            $order->update(['is_published' => true]);
 
             return $facture;
         });

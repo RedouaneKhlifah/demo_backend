@@ -8,14 +8,14 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->boolean('isPublished')->default(false)->after('note');
+            $table->boolean('is_published')->default(false)->after('note');
         });
     }
 
     public function down(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->dropColumn('isPublished');
+            $table->dropColumn('is_published');
         });
     }
 };
