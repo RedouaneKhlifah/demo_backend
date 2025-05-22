@@ -9,4 +9,8 @@ return [
         "Expiration_Date" => 'تاريخ انتهاء الصلاحية',
         "Support_Message" => 'إذا كان لديك أي أسئلة، تواصل مع فريق الدعم على support@example.com',
         "Copyright" => 'جميع الحقوق محفوظة.',
+        "messages"=> [
+                "product_deleted" => "تم حذف المنتج ':name' ولا يمكن استخدامه.",
+                "insufficient_stock" => "المخزون غير كافٍ للمنتج ':name'. المطلوب: :required، المتوفر: :available.",
+        ],
 ];

@@ -9,5 +9,8 @@ return [
         "Expiration_Date" => 'Date d\'expiration',
         "Support_Message" => 'Si vous avez des questions, contactez notre équipe support à support@example.com',
         "Copyright" => 'Tous droits réservés.',
-
+        "messages"=> [
+                "product_deleted" => "Le produit ':name' a été supprimé et ne peut pas être utilisé.",
+                "insufficient_stock" => "Stock insuffisant pour le produit ':name'. Requis : :required, Disponible : :available.",
+        ],
 ];

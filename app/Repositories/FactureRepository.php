@@ -158,7 +158,6 @@ class FactureRepository
         return $factures->toArray(); // Return the result in the required format for the chart
     }
 
-
     public function createFromOrder(Order $order): ?Facture
     {
         try {

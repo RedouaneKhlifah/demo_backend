@@ -92,14 +92,18 @@ class OrderService
                 // Check for deleted product
                 if ($product->deleted_at !== null) {
                     throw ValidationException::withMessages([
-                        'product' => "The product '{$product->name}' has been deleted and cannot be used."
+                        'product' => __('order.messages.product_deleted', ['name' => $product->name])
                     ]);
                 }
 
                 // Check for insufficient stock
                 if ($product->stock < $quantity) {
                     throw ValidationException::withMessages([
-                        'stock' => "Insufficient stock for product '{$product->name}'. Required: {$quantity}, Available: {$product->stock}"
+                        'stock' => __('order.messages.insufficient_stock', [
+                            'name' => $product->name,
+                            'required' => $quantity,
+                            'available' => $product->stock
+                        ])
                     ]);
                 }
             }
