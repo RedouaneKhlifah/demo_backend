@@ -79,8 +79,7 @@ Route::middleware(['api', 'SetLocale'])->group(function () {
         Route::patch('/orders/{order}', [OrderController::class, 'update']);
         Route::delete('/orders/{order}', [OrderController::class, 'destroy']);
         Route::put('/orders/send-order-email/{order}', [OrderController::class, 'sendOrderToEmail']);
-        Route::put('/orders/store-and-publish', [OrderController::class, 'storeAndPublish']);
-        Route::patch('/orders/update-and-publish/{order}', [OrderController::class, 'updateAndPublish']);
+        Route::post('/orders/publish/{order}', [OrderController::class, 'publishToFacture']);
 
         // Facture products routes
         Route::get('/factures', [FactureController::class, 'index']);

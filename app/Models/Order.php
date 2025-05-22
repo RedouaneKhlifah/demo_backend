@@ -13,28 +13,20 @@ class Order extends Model
     protected $table = 'orders';
 
     protected $fillable = [
-        'ticket_id',
         'client_id',
         'reference',
         'bcn',
-        'is_in_tone',
         'order_date',
         'expiration_date',
         'tva',
         'remise_type',
         'remise',
         'note',
+        'isPublished',
     ];
 
     protected $appends = ['total']; // Adds total to the JSON output
 
-    /**
-     * Relationships
-     */
-    public function ticket()
-    {
-        return $this->belongsTo(Ticket::class)->withTrashed();
-    }
 
     public function client()
     {
@@ -44,7 +36,7 @@ class Order extends Model
     public function products()
     {
         return $this->belongsToMany(Product::class, 'order_product')
-                    ->withPivot('price_unitaire', 'quantity' ,'ticket_id')
+                    ->withPivot('price_unitaire', 'quantity')
                     ->withTimestamps()
                     ->withTrashed();
     }

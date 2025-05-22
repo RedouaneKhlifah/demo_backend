@@ -2,10 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\ModelUpdated;
 use App\Http\Requests\OrderRequest;
-use App\Jobs\CreateFactureForOrderJob;
-use App\Jobs\CreateOrderForTicketJob;
 use App\Jobs\UpdateProductStockFromOrder;
 use App\Models\Order;
 use App\Services\OrderService;
@@ -17,6 +14,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderPdfMail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class OrderController extends Controller
 {
@@ -106,22 +104,36 @@ class OrderController extends Controller
 }
     }
 
-    public function storeAndPublish(OrderRequest $request): JsonResponse
+
+
+    public function publishToFacture(Order $order)
     {
-        $order = $this->orderService->createOrder($request->validated());
-        dispatch(new CreateFactureForOrderJob($order));
-        return response()->json($order, 201);
-    }
+        try {
+            $facture = $this->orderService->publishToFacture($order);
 
+            return response()->json([
+                'success' => true,
+                'message' => 'Order published to facture successfully.',
+                'data' => $facture,
+            ]);
 
-    public function updateAndPublish(OrderRequest $request, Order $order): JsonResponse
-    {
-        $order = $this->orderService->updateOrder($order, $request->validated());
+        } catch (ValidationException $e) {
+            // Stock or business rule errors
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'errors' => $e->errors(),
+            ], 422);
 
-        dispatch(new CreateFactureForOrderJob($order ));
-        return $order
-            ? response()->json($order)
-            : response()->json(['message' => 'Order not found'], 404);
+        } catch (\Exception $e) {
+            // Unexpected errors
+            Log::error("Failed to publish order to facture: " . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An unexpected error occurred while publishing the order.',
+            ], 500);
+        }
     }
 
 }

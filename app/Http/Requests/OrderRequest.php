@@ -24,11 +24,10 @@ class OrderRequest extends FormRequest
             'remise' => 'nullable|numeric',
             'note' => 'nullable|string',
             'bcn' => 'nullable|string',
-            "is_in_tone" => 'nullable|boolean',
             'products' => 'required|array',
             'products.*.product_id' => 'required|exists:products,id',
             'products.*.price_unitaire' => 'required|numeric',
-            'products.*.quantity' => 'required|numeric|min:1',
+            'products.*.quantity' => 'required|numeric|min:0',
         ];
     }
 }

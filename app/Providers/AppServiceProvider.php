@@ -20,12 +20,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(
-            ClientRepository::class,
-            function ($app) {
-                return new ClientRepository(new Client());
-            }
-        );
+        // Registering repositories in the service container
     }
 
     /**
@@ -41,8 +36,6 @@ class AppServiceProvider extends ServiceProvider
             ->group(base_path('routes/web.php'));
 
 
-        // Register the observer
-       Ticket::observe(TicketObserver::class);
 
 
     }

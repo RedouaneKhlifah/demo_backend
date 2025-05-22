@@ -2,7 +2,9 @@
 
 namespace App\Repositories;
 
+use App\Jobs\UpdateProductStockFromFacture;
 use App\Models\Facture;
+use App\Models\Order;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -156,5 +158,43 @@ class FactureRepository
         return $factures->toArray(); // Return the result in the required format for the chart
     }
 
+
+    public function createFromOrder(Order $order): ?Facture
+    {
+        try {
+            DB::beginTransaction();
+
+            $facture = Facture::create([
+                'order_id'        => $order->id,
+                'client_id'       => $order->client_id,
+                'reference'       => $order->reference,
+                'facture_date'    => $order->order_date,
+                'expiration_date' => $order->expiration_date,
+                'tva'             => $order->tva,
+                'remise_type'     => $order->remise_type,
+                'remise'          => $order->remise,
+                'note'            => $order->note,
+                'bcn'             => $order->bcn,
+                'paid_amount'     => null,
+            ]);
+
+            foreach ($order->products as $product) {
+                $facture->products()->attach($product->id, [
+                    'price_unitaire' => $product->pivot->price_unitaire,
+                    'quantity'       => $product->pivot->quantity,
+                    'order_id'       => $order->id,
+                ]);
+            }
+
+            DB::commit();
+
+            return $facture->load(['products']);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Failed to create facture from order [ID: {$order->id}]: {$e->getMessage()}");
+            return null;
+        }
+    }
 
 }

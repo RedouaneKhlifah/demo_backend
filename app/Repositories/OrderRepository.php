@@ -17,7 +17,7 @@ class OrderRepository
 
     public function getAllWithSearch($searchTerm = null, $perPage = 10)
     {
-        $query = $this->model->with(['ticket', 'products' , "client"]);
+        $query = $this->model->with(['products' , "client"]);
 
         if ($searchTerm) {
             $query->where(function ($q) use ($searchTerm) {
@@ -33,7 +33,7 @@ class OrderRepository
 
     public function find(Order $order)
     {
-        return $order->load(['ticket', 'products', 'client']);
+        return $order->load(['products', 'client']);
     }
 
     public function create(array $data)
@@ -51,7 +51,7 @@ class OrderRepository
             $order->products()->attach($products);
         }
 
-        return $order->load(['ticket', 'products' , 'client']);
+        return $order->load(['products' , 'client']);
     }
 
     public function update(Order $order, array $data)
@@ -64,13 +64,12 @@ class OrderRepository
                 return [$item['product_id'] => [
                     'price_unitaire' => $item['price_unitaire'],
                     'quantity' => $item['quantity'],
-                    "ticket_id" => $item['ticket_id']?? null
                 ]];
             });
             $order->products()->sync($products);
         }
 
-        return $order->load(['ticket', 'products' , 'client']);
+        return $order->load(['products' , 'client']);
     }
 
     public function delete(Order $order)

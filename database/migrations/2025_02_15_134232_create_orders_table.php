@@ -17,7 +17,7 @@ return new class extends Migration
             $table->date('expiration_date');
             $table->decimal('tva', 5, 2);
             $table->enum('remise_type', ['PERCENT', 'FIXED']);
-            $table->decimal('remise', 10, 2);
+            $table->decimal('remise', 10, 2)->default(0);
             $table->text('note')->nullable();
             $table->softDeletes();
             $table->timestamps();
