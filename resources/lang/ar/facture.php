@@ -7,5 +7,6 @@ return [
         "unpaid" => "غير مدفوعة",
         "paid" => "مدفوعة",
         "partially_paid" => "مدفوعة جزئيا",
+        "canceled" => "ملغاة",
     ]
 ];

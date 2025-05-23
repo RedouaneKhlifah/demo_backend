@@ -15,6 +15,7 @@ class FactureService extends Model
     const UNPAID = "UNPAID";
     const PARTIALLY_PAID = "PARTIALLY_PAID";
     const PAID = "PAID";
+    const CANCELED = "CANCELED";
 
     protected $table = 'facture_services';
 

@@ -49,6 +49,18 @@ class FactureService
         return $this->repository->delete($facture);
     }
 
+    public function cancelFacture(Facture $facture)
+    {
+        try {
+            $facture->status = Facture::CANCELED;
+            $facture->save();
+            return true;
+        } catch (\Exception $exception) {
+            return false;
+        }
+
+    }
+
     public function formatProducts(Facture $facture): Facture
     {
         $formattedProducts = $facture->products->map(function ($product) {

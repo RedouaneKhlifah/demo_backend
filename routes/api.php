@@ -86,7 +86,8 @@ Route::middleware(['api', 'SetLocale'])->group(function () {
         Route::put('/factures', [FactureController::class, 'store']);
         Route::get('/factures/{facture}', [FactureController::class, 'show']);
         Route::patch('/factures/{facture}', [FactureController::class, 'update']);
-        Route::delete('/factures/{facture}', [FactureController::class, 'destroy']);
+        // Route::delete('/factures/{facture}', [FactureController::class, 'destroy']);
+        Route::patch('/factures/{facture}/cancel', [FactureController::class, 'cancel']);
         // Route::put('/factures/send-factures-email/{facture}', [FactureController::class, 'sendFactureToEmail']);
 
         // Facture srevices routes

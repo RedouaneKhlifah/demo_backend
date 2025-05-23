@@ -7,5 +7,6 @@ return [
         "unpaid" => "Unpaid",
         "paid" => "Paid",
         "partially_paid" => "Partially Paid",
+        "canceled" => "Canceled",
     ]
 ];

@@ -15,6 +15,8 @@ class Facture extends Model
     const PARTIALLY_PAID = "PARTIALLY_PAID";
     const PAID = "PAID";
 
+    const CANCELED = "CANCELED";
+
     protected $table = 'factures';
 
     protected $fillable = [
@@ -29,11 +31,12 @@ class Facture extends Model
         "paid_amount",
         "bcn",
         'note',
+        "status"
     ];
 
     
 
-    protected $appends = ['totals',"total" , 'statusText' ,"status"]; // Adds total to the JSON output
+    protected $appends = ['totals',"total" , 'statusText']; // Adds total to the JSON output
 
     /**
      * Relationships
@@ -111,28 +114,48 @@ class Facture extends Model
     }
     
 
+    /**
+     * Get the status text based on the status attribute.
+     *
+     * @return string
+    */
     public function getStatusTextAttribute()
     {
-        if(is_null($this->paid_amount)){
-            return trans("facture.statuses.draft");
-        }elseif($this->paid_amount == 0){
-            return trans("facture.statuses.unpaid");
-        }elseif($this->paid_amount < $this->total){ 
-            return trans("facture.statuses.partially_paid");
-        }else{
-            return trans("facture.statuses.paid");
+        switch ($this->status) {
+            case self::CANCELED:
+                return trans("facture.statuses.canceled");
+            case self::DRAFT:
+                return trans("facture.statuses.draft");
+            case self::UNPAID:
+                return trans("facture.statuses.unpaid");
+            case self::PARTIALLY_PAID:
+                return trans("facture.statuses.partially_paid");
+            case self::PAID:
+                return trans("facture.statuses.paid");
+            default:
+                return "-";
         }
     }
 
+    /**
+     * Get the status of the invoice based on the paid amount and total.
+     *
+     * @return string
+    */
+
     public function getStatusAttribute()
     {
-        if(is_null($this->paid_amount)){
+        if ($this->attributes['status']) {
+            return $this->attributes['status'];
+        }
+
+        if (is_null($this->paid_amount)) {
             return self::DRAFT;
-        }elseif($this->paid_amount == 0){
+        } elseif ($this->paid_amount == 0) {
             return self::UNPAID;
-        }elseif($this->paid_amount < $this->total){ 
+        } elseif ($this->paid_amount < $this->total) {
             return self::PARTIALLY_PAID;
-        }else{
+        } else {
             return self::PAID;
         }
     }

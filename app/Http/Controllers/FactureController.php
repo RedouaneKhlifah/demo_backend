@@ -61,6 +61,16 @@ class FactureController extends Controller
 
         return response()->json(null, 204);
     }
+
+    public function cancel(Facture $facture): JsonResponse
+    {
+        $sucscess = $this->factureService->cancelFacture($facture);
+        if(!$sucscess) {
+            return response()->json(['message' => 'Failed to cancel facture'], 500);
+        }
+        return response()->json(['message' => 'Facture canceled successfully']);
+    }
+
     // public function sendFactureToEmail(Request $request, Facture $facture)
     // {
     //     try {
