@@ -31,12 +31,12 @@ class Facture extends Model
         "paid_amount",
         "bcn",
         'note',
+        'total',
         "status"
     ];
 
-    
+    protected $appends = ['statusText'];
 
-    protected $appends = ['totals',"total" , 'statusText']; // Adds total to the JSON output
 
     /**
      * Relationships
@@ -45,7 +45,7 @@ class Facture extends Model
     {
         return $this->belongsTo(Order::class )->withTrashed();
     }
-
+    
     public function client()
     {
         return $this->belongsTo(Client::class)->withTrashed();
@@ -54,65 +54,16 @@ class Facture extends Model
     public function products()
     {
         return $this->belongsToMany(Product::class, 'facture_product')
-                    ->withPivot('price_unitaire', 'quantity' ,'order_id')
+                    ->withPivot('price_unitaire', 'quantity')
                     ->withTimestamps()
                     ->withTrashed();
     }
 
-    /**
-     * Calculate total attribute
-     */
-    public function getTotalAttribute()
+    public function payments()
     {
-        // Ensure products is a collection
-        $products = collect($this->products);
-    
-        // Calculate subtotal (HT) - sum of (unit price * quantity)
-        $subtotal = $products->sum(function ($product) {
-            return data_get($product, 'sale_price', 0) * data_get($product, 'quantity', 0);
-        });
-    
-        // Calculate TVA amount (TVA% * subtotal)
-        $tvaAmount = ($subtotal * $this->tva) / 100;
-    
-        // Calculate Total TTC before applying the discount
-        $totalTTC = $subtotal + $tvaAmount;
-    
-        // Calculate Remise amount based on type (PERCENT or FIXED)
-        $remiseAmount = $this->remise_type === "PERCENT"
-            ? ($subtotal * $this->remise) / 100  // Discount applied on subtotal (HT)
-            : $this->remise;
-    
-        // Final total after applying the remise
-        return round($totalTTC - $remiseAmount, 2);
+        return $this->hasMany(Payment::class);
     }
 
-    public function getTotalsAttribute()
-    {
-        // Ensure products is a collection
-        $products = collect($this->products);
-        
-        // Calculate subtotal (HT) - sum of (unit price * quantity)
-        $subtotal = $products->sum(function ($product) {
-            return data_get($product, 'sale_price', 0) * data_get($product, 'pivot.quantity', 0);
-        });
-    
-    
-        // Calculate TVA amount (TVA% * subtotal)
-        $tvaAmount = ($subtotal * $this->tva) / 100;
-    
-        // Calculate Total TTC before applying the discount
-        $totalTTC = $subtotal + $tvaAmount;
-    
-        // Calculate Remise amount based on type (PERCENT or FIXED)
-        $remiseAmount = $this->remise_type === "PERCENT"
-            ? ($subtotal * $this->remise) / 100  // Discount applied on subtotal (HT)
-            : $this->remise;
-    
-        // Final total after applying the remise
-        return round($totalTTC - $remiseAmount, 2);
-    }
-    
 
     /**
      * Get the status text based on the status attribute.
@@ -137,29 +88,19 @@ class Facture extends Model
         }
     }
 
-    /**
-     * Get the status of the invoice based on the paid amount and total.
-     *
-     * @return string
-    */
-
-    public function getStatusAttribute()
+    public static function getStatus($paid_amount, $total_amount)
     {
-        if ($this->attributes['status']) {
-            return $this->attributes['status'];
-        }
 
-        if (is_null($this->paid_amount)) {
-            return self::DRAFT;
-        } elseif ($this->paid_amount == 0) {
-            return self::UNPAID;
-        } elseif ($this->paid_amount < $this->total) {
-            return self::PARTIALLY_PAID;
-        } else {
+        if ($paid_amount >= $total_amount) {
             return self::PAID;
         }
-    }
 
+        if ($paid_amount > 0) {
+            return self::PARTIALLY_PAID;
+        }
+
+        return self::UNPAID;
+    }
 
     
 }

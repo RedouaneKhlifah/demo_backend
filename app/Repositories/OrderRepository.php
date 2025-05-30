@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class OrderRepository
 {
@@ -42,9 +43,9 @@ class OrderRepository
         
         // If products are included in the data, attach them
         if (isset($data['products'])) {
-            $products = collect($data['products'])->mapWithKeys(function ($item) {
-                return [$item['product_id'] => [
-                    'price_unitaire' => $item['price_unitaire'],
+            $products = collect(value: $data['products'])->mapWithKeys(function ($item) {
+                return [$item['id'] => [
+                    'price_unitaire' => $item['sale_price'],
                     'quantity' => $item['quantity']
                 ]];
             });
@@ -61,8 +62,8 @@ class OrderRepository
         // If products are included in the data, sync them
         if (isset($data['products'])) {
             $products = collect($data['products'])->mapWithKeys(function ($item) {
-                return [$item['product_id'] => [
-                    'price_unitaire' => $item['price_unitaire'],
+                return [$item['id'] => [
+                    'price_unitaire' => $item['sale_price'],
                     'quantity' => $item['quantity'],
                 ]];
             });

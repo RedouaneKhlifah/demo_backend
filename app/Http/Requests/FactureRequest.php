@@ -14,22 +14,11 @@ class FactureRequest extends FormRequest
     public function rules()
     {
         return [
-            'order_id' => 'nullable|exists:orders,id',
-            "client_id" => 'required|exists:clients,id',
-            'reference' => 'required|string|max:255',
-            'facture_date' => 'required|date',
-            'expiration_date' => 'required|date',
-            "paid_amount" => 'nullable|numeric',
-            'tva' => 'required|numeric',
-            'remise_type' => 'required|string|max:255 |in:PERCENT,FIXED',
-            'remise' => 'nullable|numeric',
-            "bcn" => 'nullable|string',
-            'note' => 'nullable|string',
-            'products' => 'required|array',
-            'products.*.product_id' => 'required|exists:products,id',
-            'products.*.price_unitaire' => 'required|numeric',
-            'products.*.quantity' => 'required|numeric|min:1',
-            'products.*.order_id' => 'nullable|exists:orders,id',
+            'payments' => 'sometimes|array',
+            'payments.*.id' => 'nullable|exists:payments,id',
+            'payments.*.amount' => 'required|numeric|min:0',
+            'payments.*.type' => 'required|in:cash,bank_transfer,credit_card,check,mobile_payment,other',
+            'payments.*.payment_date' => 'required|date',
         ];
     }
 }

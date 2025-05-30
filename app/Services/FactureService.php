@@ -4,23 +4,24 @@ namespace App\Services;
 
 use App\Models\Facture;
 use App\Repositories\FactureRepository;
-
+use App\Repositories\PaymentRepository;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 class FactureService
 {
     protected $repository;
+    protected $paymentRepository;
 
-    public function __construct(FactureRepository $repository)
+    public function __construct(FactureRepository $repository , PaymentRepository $paymentRepository)
     {
         $this->repository = $repository;
+        $this->paymentRepository = $paymentRepository;
     }
 
     public function getAllFacture($searchTerm = null, $perPage = 10)
     {
         $factureCollection = $this->repository->getAllWithSearch($searchTerm, $perPage);
         // Format the products array for each Facture
-        $factureCollection->getCollection()->transform(function ($facture) {
-            return $this->formatProducts($facture);
-        });
         
         return $factureCollection;
     }
@@ -31,35 +32,85 @@ class FactureService
        return  $facture = $this->repository->find($facture);
     }
 
-    public function createFacture(array $data)
+    // public function createFacture(array $data)
+    // {
+    //     $facture =  $this->repository->create($data);
+    //     return $this->formatProducts($facture);
+    // }
+
+    public function updateFacture(Facture $facture, $data)
     {
-        $facture =  $this->repository->create($data);
-        return $this->formatProducts($facture);
+        try {
+            DB::transaction(function () use ($facture, $data) {
+                // Sync payments
+                $this->paymentRepository->syncPayments($facture->id, $data['payments'] ?? []);
+
+                // Calculate total paid
+                $paid_amount = collect($data['payments'] ?? [])
+                    ->sum(fn($payment) => $payment['amount'] ?? 0);
+
+                // Update facture
+                $facture->paid_amount = $paid_amount;
+
+                $facture->status = Facture::getStatus($paid_amount, $facture->total);
+
+                $facture->save();
+            });
+
+            return true;
+
+        } catch (\Exception $exception) {
+            Log::error('Error updating facture: ' . $exception->getMessage());
+            return false;
+        }
     }
 
-    public function updateFacture(Facture $facture, array $data)
-    {
-        $updatedFacture = $this->repository->update($facture, $data);
-        return $this->formatProducts($updatedFacture);
-
-    }
 
     public function deleteFacture(Facture $facture)
     {
         return $this->repository->delete($facture);
     }
 
+
     public function cancelFacture(Facture $facture)
     {
-        try {
+        DB::beginTransaction();
+
+        try {      
+
+            // Check if facture is cancelable
+            if (!$facture->status === Facture::PARTIALLY_PAID || !$facture->status === Facture::PAID || $facture->status === Facture::CANCELED) {
+                return false;
+            }
+
+            // Update status
             $facture->status = Facture::CANCELED;
             $facture->save();
+
+            // Load products relation
+            $facture->load('products','order');
+
+            // Decrement stock for each product
+            $facture->products->each(function ($product) {
+                $quantity = $product->pivot->quantity;
+                $product->decrement('stock', $quantity);
+            });
+
+            // remove ispublished from order
+            if ($facture->order) {
+                $facture->order->is_published = false;
+                $facture->order->save();
+            }
+
+            DB::commit();
             return true;
         } catch (\Exception $exception) {
+            DB::rollBack();
+            Log::error('Error canceling facture: ' . $exception->getMessage());
             return false;
         }
-
     }
+
 
     public function formatProducts(Facture $facture): Facture
     {

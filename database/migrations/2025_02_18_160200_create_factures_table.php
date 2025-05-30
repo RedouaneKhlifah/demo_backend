@@ -11,15 +11,17 @@ return new class extends Migration
         Schema::create('factures', function (Blueprint $table) {
             $table->id();
             $table->foreignId('order_id')->nullable()->constrained()->nullOnDelete(); 
-            $table->foreignId('client_id')->nullable()->constrained()->nullOnDelete(); 
-            $table->string('reference');
-            $table->date('facture_date');
-            $table->date('expiration_date');
-            $table->decimal('tva', 5, 2);
-            $table->enum('remise_type', ['PERCENT', 'FIXED']);
-            $table->decimal('remise', 10, 2);
-            $table->decimal('paid_amount' , 10, 2)->nullable();
+            $table->foreignId('client_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('reference')->unique();
+            $table->date('facture_date')->nullable();
+            $table->date('expiration_date')->nullable();
+            $table->decimal('tva', 10, 2)->default(0);
+            $table->string('remise_type')->nullable();
+            $table->decimal('remise', 10, 2)->default(0);
+            $table->decimal('paid_amount', 10, 2)->nullable();
+            $table->string('bcn')->nullable();
             $table->text('note')->nullable();
+            $table->string('status');
             $table->softDeletes();
             $table->timestamps();
         });

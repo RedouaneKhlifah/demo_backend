@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\OrderRequest;
-use App\Jobs\UpdateProductStockFromOrder;
+use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
@@ -26,32 +26,32 @@ class OrderController extends Controller
         $this->orderService = $orderService;
     }
 
-    public function index(Request $request): JsonResponse
+    public function index(Request $request)
     {
         $searchTerm = $request->query('search');
         $perPage = $request->query('per_page', 10);
-        $order = $this->orderService->getAllOrder($searchTerm, $perPage);
-        return response()->json($order);
+        $orders = $this->orderService->getAllOrder($searchTerm, $perPage);
+
+        return OrderResource::collection($orders);
     }
 
-    public function store(OrderRequest $request): JsonResponse
+    public function store(OrderRequest $request)
     {
         $order = $this->orderService->createOrder($request->validated());
-        UpdateProductStockFromOrder::dispatch($order, 'subtract');
-        return response()->json($order, 201);
+        return (new OrderResource($order))->response()->setStatusCode(201);
     }
 
-    public function show(Order $order): JsonResponse
+    public function show(Order $order)
     {
         $order = $this->orderService->getOrder($order);
-        return response()->json($order);
+        return new OrderResource($order);
     }
 
     public function update(OrderRequest $request, Order $order): JsonResponse
     {
         $order = $this->orderService->updateOrder($order, $request->validated());
         return $order
-            ? response()->json($order)
+            ? response()->json(new OrderResource($order))
             : response()->json(['message' => 'Order not found'], 404);
     }
 

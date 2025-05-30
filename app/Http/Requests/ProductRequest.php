@@ -9,7 +9,6 @@ class ProductRequest extends FormRequest
     public function rules()
     {
         return [
-            'display_on_desktop' => 'boolean',
             'name' => 'required|string|max:255',
             'sku' => 'nullable|string|max:255',
             'unit' => 'nullable|string|max:50',
@@ -22,16 +21,5 @@ class ProductRequest extends FormRequest
         ];
     }
 
-    /**
-     * Prepare the data for validation.
-     */
-    protected function prepareForValidation()
-    {
-        // If `display_on_desktop` is true, set `unit` to 'kg'
-        if ($this->display_on_desktop) {
-            $this->merge([
-                'unit' => 'kg',
-            ]);
-        }
-    }
+
 }

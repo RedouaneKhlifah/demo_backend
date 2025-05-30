@@ -10,7 +10,6 @@ class Product extends Model
 {
     use HasFactory , SoftDeletes;
     protected $fillable = [
-        'display_on_desktop',
         'name',
         'sku',
         'unit',
@@ -23,7 +22,6 @@ class Product extends Model
     ];
 
     protected $casts = [
-        'display_on_desktop' => 'boolean',
         'sale_price'         => 'decimal:2',
         'cost_price'         => 'decimal:2',
         'tax'                => 'decimal:2',
@@ -39,18 +37,10 @@ class Product extends Model
         return $this->morphMany(Image::class, 'imageable');
     }
 
-    public function getDescriptionAttribute($value)
-    {
-        return $value ?? '';
-    }
 
     public function order()
     {
         return $this->belongsToMany(Order::class);
     }
 
-    public function tickets()
-    {
-        return $this->belongsToMany(Ticket::class);
-    }
 }

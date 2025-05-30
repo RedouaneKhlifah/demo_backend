@@ -10,15 +10,16 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('ticket_id')->nullable()->constrained()->nullOnDelete(); 
-            $table->foreignId('client_id')->nullable()->constrained()->nullOnDelete(); 
+            $table->foreignId('client_id'); 
             $table->string('reference');
             $table->date('order_date');
             $table->date('expiration_date');
             $table->decimal('tva', 5, 2);
             $table->enum('remise_type', ['PERCENT', 'FIXED']);
             $table->decimal('remise', 10, 2)->default(0);
+            $table->string('bcn')->nullable();
             $table->text('note')->nullable();
+            $table->boolean('is_published')->default(false);
             $table->softDeletes();
             $table->timestamps();
         });
@@ -31,4 +32,5 @@ return new class extends Migration
      {
          Schema::dropIfExists('orders');
      }
+
 };

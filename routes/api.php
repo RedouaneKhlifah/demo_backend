@@ -65,16 +65,11 @@ Route::middleware(['api', 'SetLocale'])->group(function () {
         Route::patch('/services/{service}', [ServiceController::class, 'update']);
         Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
 
-        // Ticket routes
-        Route::get('/tickets', [TicketController::class, 'index']);
-        Route::put('/tickets', [TicketController::class, 'store']);
-        Route::get('/tickets/{ticket}', [TicketController::class, 'show']);
-        Route::patch('/tickets/{ticket}', [TicketController::class, 'update']);
-        Route::delete('/tickets/{ticket}', [TicketController::class, 'destroy']);
+
 
         // Order routes
         Route::get('/orders', [OrderController::class, 'index']);
-        Route::put('/orders', [OrderController::class, 'store']);
+        Route::post('/orders', [OrderController::class, 'store']);
         Route::get('/orders/{order}', [OrderController::class, 'show']);
         Route::patch('/orders/{order}', [OrderController::class, 'update']);
         Route::delete('/orders/{order}', [OrderController::class, 'destroy']);
@@ -88,14 +83,7 @@ Route::middleware(['api', 'SetLocale'])->group(function () {
         Route::patch('/factures/{facture}', [FactureController::class, 'update']);
         // Route::delete('/factures/{facture}', [FactureController::class, 'destroy']);
         Route::patch('/factures/{facture}/cancel', [FactureController::class, 'cancel']);
-        // Route::put('/factures/send-factures-email/{facture}', [FactureController::class, 'sendFactureToEmail']);
-
-        // Facture srevices routes
-        Route::get('/facture-services', [FactureServiceController::class, 'index']);
-        Route::put('/facture-services', [FactureServiceController::class, 'store']);
-        Route::get('/facture-services/{factureService}', [FactureServiceController::class, 'show']);
-        Route::patch('/facture-services/{factureService}', [FactureServiceController::class, 'update']);
-        Route::delete('/facture-services/{factureService}', [FactureServiceController::class, 'destroy']);
+        // Route::put('/factures/send-factures-email/{facture}', [FactureController::class, 'sendFactureToEmail'])
 
         // Employee routes
         Route::get('/employees', [EmployeeController::class, 'index']);

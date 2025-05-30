@@ -17,8 +17,9 @@ class CreateEmployeesTable extends Migration
             $table->string('address');
             $table->string('city');
             $table->date('date_of_engagement');
-            $table->string('cnss_number')->nullable()->default("");
+            $table->string('cnss_number')->nullable();
             $table->date('birth_date');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

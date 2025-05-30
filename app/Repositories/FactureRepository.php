@@ -2,7 +2,6 @@
 
 namespace App\Repositories;
 
-use App\Jobs\UpdateProductStockFromFacture;
 use App\Models\Facture;
 use App\Models\Order;
 use Illuminate\Support\Facades\DB;
@@ -19,64 +18,55 @@ class FactureRepository
 
     public function getAllWithSearch($searchTerm = null, $perPage = 10)
     {
-        $query = $this->model->with(['order', 'products' , "client"]);
+        $query = $this->model->with(['client', 'products']);
 
-        if ($searchTerm) {
+        if ($searchTerm = trim($searchTerm)) {
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('reference', 'like', "%{$searchTerm}%")
-                      ->orWhereHas('client', function ($q) use ($searchTerm) {
-                          $q->where('company', 'like', "%{$searchTerm}%");
-                      });
-            });
+                    ->orWhereHas('client', function ($q) use ($searchTerm) {
+                        $q->where('company', 'like', "%{$searchTerm}%");
+                    });
+                });
         }
+                    
 
-        return $query->orderBy('created_at', 'desc')->paginate($perPage);
+        return $query->orderBy('id')->paginate($perPage);
     }
 
     public function find(Facture $facture)
     {
-        return $facture->load(["order" , "products", "client"]);
+        return $facture->load([ 'client' ,'products','payments' => function ($query) {
+                                                                    $query->orderBy('payment_date', 'asc');
+                                                                }
+                            ]);
+
     }
 
-    public function create(array $data)
-    {
-        $facture = $this->model->create($data);
+    // public function create(array $data)
+    // {
+    //     $facture = $this->model->create($data);
         
-        // If products are included in the data, attach them
-        if (isset($data['products'])) {
-            $products = collect($data['products'])->mapWithKeys(function ($item) {
-                return [$item['product_id'] => [
-                    'price_unitaire' => $item['price_unitaire'],
-                    'quantity' => $item['quantity']
-                ]];
-            });
-            $facture->products()->attach($products);
-        }
+    //     // If products are included in the data, attach them
+    //     if (isset($data['products'])) {
+    //         $products = collect($data['products'])->mapWithKeys(function ($item) {
+    //             return [$item['product_id'] => [
+    //                 'price_unitaire' => $item['price_unitaire'],
+    //                 'quantity' => $item['quantity']
+    //             ]];
+    //         });
+    //         $facture->products()->attach($products);
+    //     }
 
-        return $facture->load(['products' , 'order', 'client']);
-    }
+    //     return $facture->load(['products' , 'order', 'client']);
+    // }
 
-    public function update(Facture $facture, array $data)
+    public function update(Facture $facture, array $payments)
     {
         // First update the facture model with basic data
-        $facture->update($data);
-    
-        // If products are included in the data, sync them
-        if (isset($data['products'])) {
-            $products = collect($data['products'])->mapWithKeys(function ($item) {
-                // Ensure we're not passing facture_id in the pivot data
-                return [$item['product_id'] => [
-                    'price_unitaire' => $item['price_unitaire'],
-                    'quantity' => $item['quantity'],
-                    'order_id' => $item['order_id'] ?? null
-                ]];
-            });
-            
-            $facture->products()->sync($products);
-        }
-    
+        $facture->update($payments);
+        
         // Reload the model with its relationships
-        return $facture->fresh(['order', 'products' ,'client']);
+        return $facture;
     }
     public function delete(Facture $facture)
     {
@@ -160,40 +150,63 @@ class FactureRepository
 
     public function createFromOrder(Order $order): ?Facture
     {
-        try {
-            DB::beginTransaction();
 
+        // Access the loaded products relation directly as Eloquent models
+        $products = $order->products;
+
+        // Calculate subtotal directly from the Eloquent models
+        $subtotal = collect($products)->sum(function ($product) {
+            return $product->pivot->price_unitaire * $product->pivot->quantity;
+        });
+
+        // Calculate TVA (tax)
+        $tva = $order->tva && $order->tva > 0 ? ($subtotal * $order->tva / 100) : 0;
+
+        $discount = $order->remise;
+
+        if ($order->remise_type === 'PERCENT') {
+            $discount = $subtotal * ($order->remise) / 100;
+        }
+
+        // Prevent discount from exceeding subtotal
+        $discount = min($discount, $subtotal);
+
+        // Final total
+        $total = round($subtotal + $tva - $discount, 2);
+
+        try {
             $facture = Facture::create([
-                'order_id'        => $order->id,
-                'client_id'       => $order->client_id,
-                'reference'       => $order->reference,
-                'facture_date'    => $order->order_date,
-                'expiration_date' => $order->expiration_date,
-                'tva'             => $order->tva,
-                'remise_type'     => $order->remise_type,
-                'remise'          => $order->remise,
-                'note'            => $order->note,
-                'bcn'             => $order->bcn,
-                'paid_amount'     => null,
+                'order_id'         => $order->id,
+                'client_id'        => $order->client_id,
+                'reference'        => $order->reference,
+                'bcn'              => $order->bcn,
+                'facture_date'     => $order->order_date,
+                'expiration_date'  => $order->expiration_date,
+                'tva'              => $order->tva,
+                'remise_type'      => $order->remise_type,
+                'remise'           => $order->remise,
+                'note'             => $order->note,
+                'paid_amount'      => 0,
+                'total'            => $total,
+                'status'           => Facture::DRAFT,
             ]);
 
-            foreach ($order->products as $product) {
-                $facture->products()->attach($product->id, [
-                    'price_unitaire' => $product->pivot->price_unitaire,
-                    'quantity'       => $product->pivot->quantity,
-                    'order_id'       => $order->id,
-                ]);
-            }
-
-            DB::commit();
+            // Map products with pivot data for attach
+            $facture->products()->attach(
+                $products->mapWithKeys(fn ($product) => [
+                    $product->id => [
+                        'price_unitaire' => $product->pivot->price_unitaire,
+                        'quantity'       => $product->pivot->quantity,
+                    ]
+                ])->toArray()
+            );
 
             return $facture->load(['products']);
 
-        } catch (\Exception $e) {
-            DB::rollBack();
+        } catch (\Throwable $e) {
             Log::error("Failed to create facture from order [ID: {$order->id}]: {$e->getMessage()}");
             return null;
         }
     }
-
+    
 }

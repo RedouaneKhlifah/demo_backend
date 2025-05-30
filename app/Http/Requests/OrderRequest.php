@@ -14,7 +14,6 @@ class OrderRequest extends FormRequest
     public function rules()
     {
         return [
-            'ticket_id' => 'nullable|exists:tickets,id',
             "client_id" => 'required|exists:clients,id',
             'reference' => 'required|string|max:255',
             'order_date' => 'required|date',
@@ -25,9 +24,9 @@ class OrderRequest extends FormRequest
             'note' => 'nullable|string',
             'bcn' => 'nullable|string',
             'products' => 'required|array',
-            'products.*.product_id' => 'required|exists:products,id',
-            'products.*.price_unitaire' => 'required|numeric',
+            'products.*.id' => 'required|exists:products,id',
             'products.*.quantity' => 'required|numeric|min:0',
+            'products.*.sale_price' => 'required|numeric|min:0',
         ];
     }
 }

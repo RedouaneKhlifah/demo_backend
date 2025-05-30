@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+class AddTotalToFacturesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('factures', function (Blueprint $table) {
-            $table->string('bcn')->nullable()->default("");
+            $table->decimal('total', 10, 2)->default(0)->after('note'); // adjust 'after' as needed
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('factures', function (Blueprint $table) {
-            $table->dropColumn('bcn');
+            $table->dropColumn('total');
         });
     }
-};
+}

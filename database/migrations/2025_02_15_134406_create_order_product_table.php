@@ -11,11 +11,9 @@ return new class extends Migration
         Schema::create('order_product', function (Blueprint $table) {
             $table->id();
             $table->foreignId('order_id')->nullable()->constrained()->nullOnDelete();
-            // Make product_id nullable since we are using nullOnDelete()
             $table->foreignId('product_id')->nullable()->constrained()->nullOnDelete();
-            $table->decimal('price_unitaire', 10, 2);
-            $table->integer('quantity');
-            $table->foreignId('ticket_id')->nullable()->constrained()->nullOnDelete();
+            $table->decimal('quantity',10, 2)->default(0);
+            $table->decimal('price_unitaire', 10,2)->default(0);
             $table->timestamps();
         });
     }

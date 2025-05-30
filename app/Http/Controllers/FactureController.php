@@ -2,18 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\ModelUpdated;
 use App\Http\Requests\FactureRequest;
-use App\Jobs\UpdateProductStockFromFacture;
+use App\Http\Resources\FactureResource;
 use App\Models\Facture;
 use App\Services\FactureService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\FacturePdfMail;
+
 
 class FactureController extends Controller
 {
@@ -25,33 +20,39 @@ class FactureController extends Controller
         $this->factureService = $factureService;
     }
 
-    public function index(Request $request): JsonResponse
+    public function index(Request $request)
     {
         $searchTerm = $request->query('search');
         $perPage = $request->query('per_page', 10);
         $facture = $this->factureService->getAllFacture($searchTerm, $perPage);
-        return response()->json($facture);
+        return FactureResource::collection($facture);
     }
 
-    public function store(FactureRequest $request): JsonResponse
-    {
-        $facture = $this->factureService->createFacture($request->validated());
+    // public function store(FactureRequest $request): JsonResponse
+    // {
+    //     $facture = $this->factureService->createFacture($request->validated());
 
-        return response()->json($facture, 201);
-    }
+    //     return response()->json($facture, 201);
+    // }
 
-    public function show(Facture $facture): JsonResponse
+    public function show(Facture $facture)
     {
         $facture = $this->factureService->getFacture($facture);
-        return response()->json($facture);
+        return new FactureResource($facture);
     }
 
-    public function update(FactureRequest $request, Facture $facture): JsonResponse
+    public function update(FactureRequest $request, Facture $facture)
     {
-       $facture = $this->factureService->updateFacture($facture, $request->validated());
-        return $facture
-            ? response()->json($facture)
-            : response()->json(['message' => 'Facture not found'], 404);
+        if($facture->status === Facture::CANCELED) {
+            return response()->json(['message' => 'Cannot update a canceled facture'], 400);
+        };
+
+       $facture = $this->factureService->updateFacture($facture,  $request->validated());
+
+        if (!$facture) {
+            return response()->json(['message' => 'Failed to update facture'], 500);
+        }
+        return $facture;
     }
 
 
