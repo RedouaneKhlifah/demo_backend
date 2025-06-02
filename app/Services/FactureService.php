@@ -93,7 +93,7 @@ class FactureService
             // Decrement stock for each product
             $facture->products->each(function ($product) {
                 $quantity = $product->pivot->quantity;
-                $product->decrement('stock', $quantity);
+                $product->increment('stock', $quantity);
             });
 
             // remove ispublished from order

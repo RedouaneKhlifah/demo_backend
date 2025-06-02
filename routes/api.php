@@ -40,14 +40,6 @@ Route::middleware(['api', 'SetLocale'])->group(function () {
         Route::delete('/clients/bulk', [ClientController::class, 'bulkDestroy']);
         Route::delete('/clients/{client}', [ClientController::class, 'destroy']);
 
-        // Partenaire routes
-        Route::get('/partenaires', [PartenaireController::class, 'index']);
-        Route::put('/partenaires', [PartenaireController::class, 'store']);
-        Route::get('/partenaires/{partenaire}', [PartenaireController::class, 'show']);
-        Route::patch('/partenaires/{partenaire}', [PartenaireController::class, 'update']);
-        Route::delete('/partenaires/{partenaire}', [PartenaireController::class, 'destroy']);
-        Route::get('/partenaires/{partenaire}/tickets', [PartenaireController::class, 'getTicketsWithSum']);
-
         // Product routes
         Route::get('/products', [ProductController::class, 'index']);
         Route::get('/products/archived', [ProductController::class, 'archived']);

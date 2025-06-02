@@ -35,7 +35,14 @@ class OrderController extends Controller
         return OrderResource::collection($orders);
     }
 
-    public function store(OrderRequest $request)
+/*************  ✨ Windsurf Command ⭐  *************/
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \App\Http\Requests\OrderRequest  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+/*******  5a373d23-b30d-42b0-834b-b01d03feb23a  *******/    public function store(OrderRequest $request)
     {
         $order = $this->orderService->createOrder($request->validated());
         return (new OrderResource($order))->response()->setStatusCode(201);
@@ -101,7 +108,7 @@ class OrderController extends Controller
                 'error' => $e->getMessage()
             ], 500);
 
-}
+        }
     }
 
 
